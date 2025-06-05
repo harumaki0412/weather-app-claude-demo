@@ -1,0 +1,11 @@
+# GitHub CLI 設定ファイル
+git_protocol: https
+editor: code
+prompt: enabled
+pager: less
+
+aliases:
+  co: pr checkout
+  pv: pr view
+  quick-pr: |
+    !gh pr create --title "$1" --body "🤖 自動生成PR" --label auto-merge
