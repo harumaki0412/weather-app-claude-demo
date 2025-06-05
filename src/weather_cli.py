@@ -4,6 +4,8 @@ Weather CLI - 天気情報取得コマンドラインアプリ
 ユーザーフレンドリーなインターフェースと包括的なエラーハンドリングを提供
 """
 
+__version__ = "1.0.0"
+
 import sys
 import argparse
 import logging
@@ -340,6 +342,13 @@ def create_parser() -> argparse.ArgumentParser:
         '--no-color',
         action='store_true',
         help='カラー出力を無効化'
+    )
+    
+    parser.add_argument(
+        '--version',
+        action='version',
+        version=f'%(prog)s {__version__}',
+        help='バージョン情報を表示'
     )
     
     return parser

@@ -4,6 +4,8 @@ Weather Web App - Flask ベースの天気情報取得Webアプリケーショ�
 CLI版で作成したAPIクライアントを活用したユーザーフレンドリーなWebインターフェース
 """
 
+__version__ = "1.0.0"
+
 import os
 import sys
 import logging
@@ -250,6 +252,15 @@ class WeatherWebApp:
                     'timestamp': datetime.now().isoformat(),
                     'error': str(e)
                 }), 500
+        
+        @self.flask_app.route('/api/version')
+        def version_info():
+            """バージョン情報エンドポイント"""
+            return jsonify({
+                'version': __version__,
+                'name': 'Weather Web App',
+                'timestamp': datetime.now().isoformat()
+            })
         
         @self.flask_app.errorhandler(404)
         def not_found(error):
