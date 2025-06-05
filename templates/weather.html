@@ -1,0 +1,399 @@
+{% extends "base.html" %}
+
+{% block title %}天気情報 - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="search-section">
+    <form method="POST" action="{{ url_for('weather') }}" class="search-form">
+        <div class="input-group">
+            <input type="text" 
+                   name="city" 
+                   placeholder="都市名を入力してください（例: Tokyo, London, 東京）" 
+                   value="{{ request.form.city or '' }}"
+                   class="search-input"
+                   required>
+            <button type="submit" class="search-button">🔍 天気を調べる</button>
+        </div>
+        <div class="suggestions">
+            <span class="suggestion-label">人気の都市:</span>
+            <button type="button" class="suggestion-btn" onclick="searchCity('Tokyo')">東京</button>
+            <button type="button" class="suggestion-btn" onclick="searchCity('Osaka')">大阪</button>
+            <button type="button" class="suggestion-btn" onclick="searchCity('London')">ロンドン</button>
+            <button type="button" class="suggestion-btn" onclick="searchCity('New York')">ニューヨーク</button>
+            <button type="button" class="suggestion-btn" onclick="searchCity('Paris')">パリ</button>
+        </div>
+    </form>
+</div>
+
+{% if weather_data %}
+<div class="weather-display" id="weatherResult">
+    <div class="weather-header">
+        <h2>{{ weather_data.city_name }}, {{ weather_data.country }} の天気</h2>
+        <div class="timestamp">
+            📅 {{ weather_data.timestamp.strftime('%Y年%m月%d日 %H:%M') }} 更新
+        </div>
+    </div>
+    
+    <div class="weather-main">
+        <div class="weather-icon-section">
+            <div class="weather-icon">
+                {% if 'clear' in weather_data.description_en.lower() %}
+                    ☀️
+                {% elif 'cloud' in weather_data.description_en.lower() %}
+                    ☁️
+                {% elif 'rain' in weather_data.description_en.lower() %}
+                    🌧️
+                {% elif 'drizzle' in weather_data.description_en.lower() %}
+                    🌦️
+                {% elif 'thunderstorm' in weather_data.description_en.lower() %}
+                    ⛈️
+                {% elif 'snow' in weather_data.description_en.lower() %}
+                    ❄️
+                {% elif 'mist' in weather_data.description_en.lower() or 'fog' in weather_data.description_en.lower() %}
+                    🌫️
+                {% else %}
+                    🌤️
+                {% endif %}
+            </div>
+            <div class="description">{{ weather_data.description }}</div>
+        </div>
+        
+        <div class="temperature-section">
+            <div class="main-temp">{{ weather_data.temperature }}°C</div>
+            <div class="feels-like">体感温度 {{ weather_data.feels_like }}°C</div>
+        </div>
+    </div>
+    
+    <div class="weather-details">
+        <div class="detail-grid">
+            <div class="detail-item">
+                <div class="detail-icon">💧</div>
+                <div class="detail-label">湿度</div>
+                <div class="detail-value">{{ weather_data.humidity }}%</div>
+            </div>
+            
+            <div class="detail-item">
+                <div class="detail-icon">🎈</div>
+                <div class="detail-label">気圧</div>
+                <div class="detail-value">{{ weather_data.pressure }} hPa</div>
+            </div>
+            
+            {% if weather_data.wind_speed %}
+            <div class="detail-item">
+                <div class="detail-icon">💨</div>
+                <div class="detail-label">風速</div>
+                <div class="detail-value">{{ weather_data.wind_speed }} m/s</div>
+            </div>
+            {% endif %}
+            
+            {% if weather_data.visibility %}
+            <div class="detail-item">
+                <div class="detail-icon">👁️</div>
+                <div class="detail-label">視程</div>
+                <div class="detail-value">{{ (weather_data.visibility / 1000) | round(1) }} km</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="action-buttons">
+        <button onclick="refreshWeather()" class="refresh-btn">🔄 更新</button>
+        <button onclick="shareWeather()" class="share-btn">📤 共有</button>
+    </div>
+</div>
+{% endif %}
+
+<div class="info-section">
+    <h3>💡 使い方</h3>
+    <ul>
+        <li>上記の検索ボックスに都市名を入力してください</li>
+        <li>英語（Tokyo, London）または日本語（東京、大阪）で入力できます</li>
+        <li>人気の都市ボタンをクリックして素早く検索することもできます</li>
+        <li>天気情報は OpenWeatherMap API から取得しています</li>
+    </ul>
+</div>
+
+<style>
+.search-section {
+    margin-bottom: 30px;
+}
+
+.search-form {
+    text-align: center;
+}
+
+.input-group {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.search-input {
+    flex: 1;
+    padding: 12px 16px;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.search-input:focus {
+    border-color: #4CAF50;
+}
+
+.search-button {
+    padding: 12px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.search-button:hover {
+    background-color: #45a049;
+}
+
+.suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+}
+
+.suggestion-label {
+    color: #666;
+    margin-right: 10px;
+}
+
+.suggestion-btn {
+    padding: 6px 12px;
+    background-color: #f0f0f0;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 14px;
+}
+
+.suggestion-btn:hover {
+    background-color: #e0e0e0;
+    border-color: #4CAF50;
+}
+
+.weather-display {
+    background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+    color: white;
+    border-radius: 15px;
+    padding: 25px;
+    margin: 20px 0;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.weather-header {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.weather-header h2 {
+    margin: 0 0 10px 0;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+.timestamp {
+    opacity: 0.9;
+    font-size: 14px;
+}
+
+.weather-main {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.weather-icon-section {
+    text-align: center;
+}
+
+.weather-icon {
+    font-size: 80px;
+    margin-bottom: 10px;
+}
+
+.description {
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.temperature-section {
+    text-align: center;
+}
+
+.main-temp {
+    font-size: 48px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.feels-like {
+    font-size: 16px;
+    opacity: 0.9;
+}
+
+.weather-details {
+    margin-bottom: 20px;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 15px;
+}
+
+.detail-item {
+    background: rgba(255,255,255,0.1);
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+}
+
+.detail-icon {
+    font-size: 24px;
+    margin-bottom: 8px;
+}
+
+.detail-label {
+    font-size: 14px;
+    opacity: 0.9;
+    margin-bottom: 5px;
+}
+
+.detail-value {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.refresh-btn, .share-btn {
+    padding: 10px 20px;
+    background: rgba(255,255,255,0.2);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 25px;
+    cursor: pointer;
+    transition: all 0.3s;
+    backdrop-filter: blur(10px);
+}
+
+.refresh-btn:hover, .share-btn:hover {
+    background: rgba(255,255,255,0.3);
+    border-color: rgba(255,255,255,0.5);
+}
+
+.info-section {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 30px;
+}
+
+.info-section h3 {
+    margin-top: 0;
+    color: #333;
+}
+
+.info-section ul {
+    margin: 15px 0;
+    padding-left: 20px;
+}
+
+.info-section li {
+    margin-bottom: 8px;
+    line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+    .input-group {
+        flex-direction: column;
+    }
+    
+    .weather-main {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .main-temp {
+        font-size: 36px;
+    }
+    
+    .weather-icon {
+        font-size: 60px;
+    }
+    
+    .detail-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+</style>
+
+<script>
+function searchCity(cityName) {
+    document.querySelector('input[name="city"]').value = cityName;
+    document.querySelector('.search-form').submit();
+}
+
+function refreshWeather() {
+    const currentCity = '{{ weather_data.city_name if weather_data else "" }}';
+    if (currentCity) {
+        searchCity(currentCity);
+    }
+}
+
+function shareWeather() {
+    const weatherData = {{ weather_data.to_dict() | tojson if weather_data else '{}' }};
+    if (weatherData.city_name) {
+        const shareText = `${weatherData.city_name}の天気: ${weatherData.description} ${weatherData.temperature}°C`;
+        if (navigator.share) {
+            navigator.share({
+                title: '天気情報',
+                text: shareText,
+                url: window.location.href
+            });
+        } else {
+            navigator.clipboard.writeText(shareText).then(() => {
+                alert('天気情報をクリップボードにコピーしました！');
+            });
+        }
+    }
+}
+
+// 検索フォームのエンターキー対応
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.querySelector('.search-input');
+    searchInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            document.querySelector('.search-form').submit();
+        }
+    });
+});
+</script>
+{% endblock %}

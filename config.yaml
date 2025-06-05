@@ -1,0 +1,21 @@
+# Weather App Configuration
+api:
+  base_url: "https://api.openweathermap.org/data/2.5/"
+  timeout: 10
+  units: "metric"  # metric, imperial, or kelvin
+
+# Default settings
+defaults:
+  city: "Tokyo"
+  language: "ja"
+
+# Flask web app settings
+web:
+  host: "0.0.0.0"
+  port: 5000
+  debug: true
+
+# Logging configuration
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

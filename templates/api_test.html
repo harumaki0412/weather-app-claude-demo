@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block title %}API テスト - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="api-test-section">
+    <h2>🔧 API テストページ</h2>
+    <p>REST APIエンドポイントのテストが行えます。</p>
+    
+    <div class="test-form">
+        <h3>天気情報API テスト</h3>
+        <div class="input-group">
+            <input type="text" id="apiCity" placeholder="都市名を入力" value="Tokyo">
+            <button onclick="testAPI()" class="test-button">API テスト実行</button>
+        </div>
+    </div>
+    
+    <div id="apiResult" class="api-result"></div>
+    
+    <div class="endpoints-info">
+        <h3>📋 利用可能なエンドポイント</h3>
+        <ul>
+            <li><code>GET /api/weather/{city_name}</code> - 指定都市の天気情報をJSON形式で取得</li>
+            <li><code>GET /health</code> - アプリケーションのヘルスチェック</li>
+        </ul>
+        
+        <h4>レスポンス例:</h4>
+        <pre><code>{
+  "status": "success",
+  "data": {
+    "city_name": "Tokyo",
+    "country": "JP",
+    "temperature": 22.5,
+    "humidity": 65,
+    "description": "曇り",
+    "timestamp": "2024-01-01T12:00:00"
+  }
+}</code></pre>
+    </div>
+</div>
+
+<style>
+.api-test-section {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.test-form {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    margin: 20px 0;
+}
+
+.input-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.input-group input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.test-button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.test-button:hover {
+    background-color: #0056b3;
+}
+
+.api-result {
+    margin: 20px 0;
+    padding: 15px;
+    border-radius: 5px;
+    font-family: monospace;
+    min-height: 50px;
+}
+
+.api-result.success {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
+
+.api-result.error {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
+.endpoints-info {
+    background-color: #e9ecef;
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 30px;
+}
+
+.endpoints-info code {
+    background-color: #fff;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: monospace;
+}
+
+.endpoints-info pre {
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 5px;
+    overflow-x: auto;
+}
+</style>
+
+<script>
+async function testAPI() {
+    const city = document.getElementById('apiCity').value.trim();
+    const resultDiv = document.getElementById('apiResult');
+    
+    if (!city) {
+        resultDiv.className = 'api-result error';
+        resultDiv.textContent = 'エラー: 都市名を入力してください';
+        return;
+    }
+    
+    resultDiv.className = 'api-result';
+    resultDiv.textContent = 'API リクエスト中...';
+    
+    try {
+        const response = await fetch(`/api/weather/${encodeURIComponent(city)}`);
+        const data = await response.json();
+        
+        if (response.ok) {
+            resultDiv.className = 'api-result success';
+            resultDiv.textContent = JSON.stringify(data, null, 2);
+        } else {
+            resultDiv.className = 'api-result error';
+            resultDiv.textContent = `エラー (${response.status}): ${JSON.stringify(data, null, 2)}`;
+        }
+    } catch (error) {
+        resultDiv.className = 'api-result error';
+        resultDiv.textContent = `ネットワークエラー: ${error.message}`;
+    }
+}
+
+// エンターキーでAPI実行
+document.getElementById('apiCity').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        testAPI();
+    }
+});
+</script>
+{% endblock %}

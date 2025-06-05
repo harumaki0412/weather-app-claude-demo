@@ -1,0 +1,17 @@
+#!/usr/bin/env python3
+"""
+Weather Web App - 実行用ラッパースクリプト
+プロジェクトルートから簡単にWebアプリを起動できるようにします
+"""
+
+import sys
+from pathlib import Path
+
+# プロジェクトルートディレクトリを取得
+project_root = Path(__file__).parent.absolute()
+sys.path.insert(0, str(project_root))
+
+# メイン Web アプリモジュールをインポートして実行
+if __name__ == "__main__":
+    from src.weather_web import main
+    sys.exit(main())
