@@ -1,0 +1,29 @@
+name: Auto Review and Merge
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-review:
+    runs-on: ubuntu-latest
+    if: contains(github.event.pull_request.labels.*.name, 'auto-merge')
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Auto approve PR
+      run: |
+        gh pr review --approve --body "🤖 自動承認: コード品質チェック通過"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Auto merge PR
+      run: |
+        gh pr merge --auto --squash
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
